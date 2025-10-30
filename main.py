@@ -1028,18 +1028,18 @@ async def check_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ================================================================
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (
-        "<code>Please send me a <b>.txt file</b> containing site URLs to check.</code>\n"
-        "<code>Each line should contain one site (e.g., <code>https://example.com</code>).</code>\n\n"
-        "<code>Use</code> <b>/help</b> <code>to learn how to add your own card or get more info.</code>"
+        "<code>✧Please send me a <b>.txt file</b> containing site URLs to check.</code>\n"
+        "<code>✧Each line should contain one site (e.g., <code>https://example.com</code>).</code>\n\n"
+        "<code>✧Use</code> <b>/help</b> <code>to learn how to add your own card or get more info.</code>"
     )
     await update.message.reply_text(text, parse_mode=ParseMode.HTML)
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (
-        "<code>Send a .txt file containing one site URL per line.</code>\n"
-        "<code>To use your own card for checks, save it via the</code> <b>/card</b> <code>command before uploading the .txt file.</code>\n"
-        "<code>Example: /check https://example.com</code>"
+        "<code>✧Send a .txt file containing one site URL per line.</code>\n"
+        "<code>✧To use your own card for checks, save it via the</code> <b>/card</b> <code>command before uploading the .txt file.</code>\n"
+        "<code>✧Example: /check https://example.com</code>"
     )
     await update.message.reply_text(text, parse_mode=ParseMode.HTML)
 
@@ -1166,5 +1166,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
