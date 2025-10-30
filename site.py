@@ -5,7 +5,7 @@ import builtins
 import logging
 from concurrent.futures import ThreadPoolExecutor
 
-DEBUG_MODE = False
+DEBUG_MODE = True
 
 def _silent_print(*args, **kwargs):
     if DEBUG_MODE:
@@ -1166,4 +1166,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
