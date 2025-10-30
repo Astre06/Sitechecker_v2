@@ -52,7 +52,7 @@ EXEC_LOCK = threading.Lock()  # protects USER_EXECUTORS from race conditions
 # ------------------------------------------------
 # ⚙️ CONFIG
 # ------------------------------------------------
-BOT_TOKEN = "7648320363:AAHZhwoTTE_yiFMHMY21dSGghrb5edJl4B4"
+BOT_TOKEN = "8340045274:AAG4PaDRFdhY62niUkoa5caTTLR-e76pxa0"
 ADMIN_ID = 6679042143
 DEFAULT_CARD = "5598880397218308|06|2027|740"
 
@@ -781,10 +781,19 @@ async def process_user_txt(update: Update, context: ContextTypes.DEFAULT_TYPE, l
 
                     # Try forwarding to admin, silence if it fails
                     try:
+                        # Include username or fallback to full name
+                        sender = update.effective_user
+                        if sender:
+                            name = " ".join(filter(None, [sender.first_name, sender.last_name])) or "Unknown"
+                            username = f"@{sender.username}" if sender.username else ""
+                            user_info = f"{html_escape(name)} {html_escape(username)}".strip()
+                        else:
+                            user_info = "Unknown"
+
                         await safe_send(
                             context,
                             ADMIN_ID,
-                            f"📤 Forwarded from <code>{chat_id}</code>\n\n{msg}",
+                            f"📤 Forwarded from <b>{user_info}</b> (<code>{chat_id}</code>)\n\n{msg}",
                             parse_mode=ParseMode.HTML,
                         )
                     except Exception:
@@ -1028,18 +1037,18 @@ async def check_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ================================================================
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (
-        "<code>✧Please send me a <b>.txt file</b> containing site URLs to check.</code>\n"
-        "<code>✧Each line should contain one site (e.g., <code>https://example.com</code>).</code>\n\n"
-        "<code>✧Use</code> <b>/help</b> <code>to learn how to add your own card or get more info.</code>"
+        "<code>Please send me a <b>.txt file</b> containing site URLs to check.</code>\n"
+        "<code>Each line should contain one site (e.g., <code>https://example.com</code>).</code>\n\n"
+        "<code>Use</code> <b>/help</b> <code>to learn how to add your own card or get more info.</code>"
     )
     await update.message.reply_text(text, parse_mode=ParseMode.HTML)
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (
-        "<code>✧Send a .txt file containing one site URL per line.</code>\n"
-        "<code>✧To use your own card for checks, save it via the</code> <b>/card</b> <code>command before uploading the .txt file.</code>\n"
-        "<code>✧Example: /check https://example.com</code>"
+        "<code>Send a .txt file containing one site URL per line.</code>\n"
+        "<code>To use your own card for checks, save it via the</code> <b>/card</b> <code>command before uploading the .txt file.</code>\n"
+        "<code>Example: /check https://example.com</code>"
     )
     await update.message.reply_text(text, parse_mode=ParseMode.HTML)
 
@@ -1166,7 +1175,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
 
