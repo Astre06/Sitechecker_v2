@@ -634,6 +634,18 @@ async def process_user_txt(update: Update, context: ContextTypes.DEFAULT_TYPE, l
             # Stripe + site interaction
             for attempt in range(2):
                 result = send_card_to_stripe(session, pk_raw, user_card)
+                txt = str(result).lower()
+                if "testmode_charges_only" in txt:
+                    status, reason, rtype = "TEST MODE", "Test mode charges only, no real payments.", "error"
+                    if DEBUG_MODE:
+                        builtins._orig_print(f"[RESULT] ❌ Test mode (charges only) for site {base} (user {chat_id})")
+
+                    # Increment the error count before returning
+                    with lock:
+                        progress["error_count"] += 1
+
+                    return None  # Skip sending the result
+                              
                 if result.get("status_key") in ("success", "declined"):
                     break
                 if attempt == 0 and DEBUG_MODE:
@@ -784,6 +796,7 @@ async def process_user_txt(update: Update, context: ContextTypes.DEFAULT_TYPE, l
                         # Include username or fallback to full name
                         sender = update.effective_user
                         if sender:
+                            # Get full name, fallback to username if full name is not available
                             name = " ".join(filter(None, [sender.first_name, sender.last_name])) or "Unknown"
                             username = f"@{sender.username}" if sender.username else ""
                             user_info = f"{html_escape(name)} {html_escape(username)}".strip()
@@ -879,7 +892,7 @@ async def process_user_txt(update: Update, context: ContextTypes.DEFAULT_TYPE, l
                     await context.bot.send_document(
                         chat_id=ADMIN_ID,
                         document=rf,
-                        caption=f"✅ <b>Live Sites ({len(all_valids)})</b>\nSaved as <code>{os.path.basename(raw_path)}</code>",
+                        caption=f"✅ <b>Live Sites ({len(all_valids)})</b>",
                         parse_mode=ParseMode.HTML,
                     )
                 else:
@@ -887,7 +900,7 @@ async def process_user_txt(update: Update, context: ContextTypes.DEFAULT_TYPE, l
                     await context.bot.send_document(
                         chat_id=chat_id,
                         document=rf,
-                        caption=f"✅ <b>Live Sites ({len(all_valids)})</b>\nSaved as <code>{os.path.basename(raw_path)}</code>",
+                        caption=f"✅ <b>Live Sites ({len(all_valids)})</b>",
                         parse_mode=ParseMode.HTML,
                     )
                     rf.seek(0)
@@ -1175,4 +1188,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
