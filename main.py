@@ -769,18 +769,22 @@ async def process_user_txt(update: Update, context: ContextTypes.DEFAULT_TYPE, l
             elif rtype == "error":
                 progress["error_count"] += 1
 
-        # 🚫 Skip sending if it's test mode or expired API key error
+        # 🚫 Skip sending if site is test mode, expired API key, or used real card in test mode
         raw_text = str(result.get("raw", "")).lower()
-        if (
-            "testmode_charges_only" in raw_text
-            or "platform_api_key_expired" in raw_text
-            or "expired api key" in raw_text
-            or "test mode" in raw_text
-        ):
+        skip_signals = (
+            "testmode_charges_only",
+            "platform_api_key_expired",
+            "expired api key",
+            "test mode",
+            "your request used a real card while testing",
+            "for a list of valid test cards",
+        )
+
+        if any(sig in raw_text for sig in skip_signals):
             with lock:
                 progress["error_count"] += 1
             if DEBUG_MODE:
-                builtins._orig_print(f"[SKIP] Testmode or expired API key: {result.get('site')}")
+                builtins._orig_print(f"[SKIP] Test/sandbox/expired key: {result.get('site')}")
             continue
 
         if "site" in result:
@@ -794,6 +798,7 @@ async def process_user_txt(update: Update, context: ContextTypes.DEFAULT_TYPE, l
                 f"<b>Result:</b> {html_escape(result['status'])}\n"
                 f"<code>{html_escape(result['raw'])}</code>"
             )
+
 
             try:
                 # If admin is running the check, send only to admin
