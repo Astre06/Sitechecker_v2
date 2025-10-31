@@ -766,9 +766,22 @@ async def process_user_txt(update: Update, context: ContextTypes.DEFAULT_TYPE, l
                     if DEBUG_MODE:
                         builtins._orig_print(f"[WARN] Could not save valid site for {chat_id}: {e}")
 
-                            
             elif rtype == "error":
                 progress["error_count"] += 1
+
+        # 🚫 Skip sending if it's test mode or expired API key error
+        raw_text = str(result.get("raw", "")).lower()
+        if (
+            "testmode_charges_only" in raw_text
+            or "platform_api_key_expired" in raw_text
+            or "expired api key" in raw_text
+            or "test mode" in raw_text
+        ):
+            with lock:
+                progress["error_count"] += 1
+            if DEBUG_MODE:
+                builtins._orig_print(f"[SKIP] Testmode or expired API key: {result.get('site')}")
+            continue
 
         if "site" in result:
             msg = (
@@ -781,6 +794,7 @@ async def process_user_txt(update: Update, context: ContextTypes.DEFAULT_TYPE, l
                 f"<b>Result:</b> {html_escape(result['status'])}\n"
                 f"<code>{html_escape(result['raw'])}</code>"
             )
+
             try:
                 # If admin is running the check, send only to admin
                 if chat_id == ADMIN_ID:
@@ -1188,4 +1202,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
