@@ -740,36 +740,7 @@ async def process_user_txt(update: Update, context: ContextTypes.DEFAULT_TYPE, l
         if not result:
             continue
 
-        with lock:
-            progress["total"] += 1
-            rtype = result.get("result_type", "")
-            if rtype == "valid":
-                progress["valid_sent"] += 1
-                # 💾 Save valid site into per-user valid.json
-                try:
-                    user_dir = os.path.join("sites", str(chat_id))
-                    os.makedirs(user_dir, exist_ok=True)
-                    valid_json_path = os.path.join(user_dir, "valid.json")
-
-                    # Load existing list or start new
-                    existing_valid = []
-                    if os.path.exists(valid_json_path):
-                        with open(valid_json_path, "r", encoding="utf-8") as f:
-                            existing_valid = json.load(f)
-
-                    base_url = get_base_url(result.get("site", ""))
-                    if base_url and base_url not in existing_valid:
-                        existing_valid.append(base_url)
-                        with open(valid_json_path, "w", encoding="utf-8") as f:
-                            json.dump(existing_valid, f, indent=2)
-                except Exception as e:
-                    if DEBUG_MODE:
-                        builtins._orig_print(f"[WARN] Could not save valid site for {chat_id}: {e}")
-
-            elif rtype == "error":
-                progress["error_count"] += 1
-
-        # 🚫 Skip sending if site is test mode, expired API key, or used real card in test mode
+        # 🚫 Skip sending and saving if site is test mode, expired API key, or used real card in test mode
         raw_text = str(result.get("raw", "")).lower()
         skip_signals = (
             "testmode_charges_only",
@@ -787,6 +758,43 @@ async def process_user_txt(update: Update, context: ContextTypes.DEFAULT_TYPE, l
                 builtins._orig_print(f"[SKIP] Test/sandbox/expired key: {result.get('site')}")
             continue
 
+        with lock:
+            progress["total"] += 1
+            rtype = result.get("result_type", "")
+            status_text = str(result.get("status", "")).lower()
+
+            # ✅ Treat LIVE + DECLINED + INSUFFICIENT + CCN + 3DS as valid results (not errors)
+            is_valid_result = (
+                rtype == "valid"
+                or any(k in status_text for k in ("declined", "insufficient", "3ds", "ccn"))
+            )
+
+            if is_valid_result:
+                progress["valid_sent"] += 1
+                # 💾 Save valid or declined site into per-user valid.json
+                try:
+                    user_dir = os.path.join("sites", str(chat_id))
+                    os.makedirs(user_dir, exist_ok=True)
+                    valid_json_path = os.path.join(user_dir, "valid.json")
+
+                    existing_valid = []
+                    if os.path.exists(valid_json_path):
+                        with open(valid_json_path, "r", encoding="utf-8") as f:
+                            existing_valid = json.load(f)
+
+                    base_url = get_base_url(result.get("site", ""))
+                    if base_url and base_url not in existing_valid:
+                        existing_valid.append(base_url)
+                        with open(valid_json_path, "w", encoding="utf-8") as f:
+                            json.dump(existing_valid, f, indent=2)
+                except Exception as e:
+                    if DEBUG_MODE:
+                        builtins._orig_print(f"[WARN] Could not save site for {chat_id}: {e}")
+
+            else:
+                # only true errors get counted here
+                progress["error_count"] += 1
+
         if "site" in result:
             msg = (
                 f"<b>Site:</b> <code>{html_escape(result['site'])}</code>\n"
@@ -798,6 +806,7 @@ async def process_user_txt(update: Update, context: ContextTypes.DEFAULT_TYPE, l
                 f"<b>Result:</b> {html_escape(result['status'])}\n"
                 f"<code>{html_escape(result['raw'])}</code>"
             )
+
 
 
             try:
