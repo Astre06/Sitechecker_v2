@@ -741,6 +741,8 @@ async def process_user_txt(update: Update, context: ContextTypes.DEFAULT_TYPE, l
             continue
 
         # 🚫 Skip sending and saving if site is test mode, expired API key, or used real card in test mode
+        # 🚫 Skip sending and saving if site is test mode, expired API key, or used real card in test mode
+        #    Also skip known decline reasons like "card not supported", "impossible de vérifier", or "cannot make live charges"
         raw_text = str(result.get("raw", "")).lower()
         skip_signals = (
             "testmode_charges_only",
@@ -749,7 +751,15 @@ async def process_user_txt(update: Update, context: ContextTypes.DEFAULT_TYPE, l
             "test mode",
             "your request used a real card while testing",
             "for a list of valid test cards",
+            # 🆕 Added skip patterns based on known decline messages
+            "your card is not supported",
+            "card not supported",
+            "impossible de vérifier votre demande",
+            "impossible de vérifier",
+            "your account cannot currently make live charges",
+            "cannot currently make live charges",
         )
+
 
         if any(sig in raw_text for sig in skip_signals):
             with lock:
@@ -1216,5 +1226,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
