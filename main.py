@@ -52,7 +52,7 @@ EXEC_LOCK = threading.Lock()  # protects USER_EXECUTORS from race conditions
 # ------------------------------------------------
 # ⚙️ CONFIG
 # ------------------------------------------------
-BOT_TOKEN = "7648320363:AAHZhwoTTE_yiFMHMY21dSGghrb5edJl4B4"
+BOT_TOKEN = "7648320363:AAHrTehSZMwqcjAauiewEhd0Q6jZdiuZyCU"
 ADMIN_ID = 6679042143
 DEFAULT_CARD = "5598880397218308|06|2027|740"
 
@@ -1226,6 +1226,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
